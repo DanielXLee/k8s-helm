@@ -1,0 +1,4 @@
+#!/usr/local/bin/bash
+
+/usr/local/bin/helm repo add helmrepo $1
+/usr/local/bin/helm ${*:2}

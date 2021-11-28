@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: install-clusternet
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: install-clusternet
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: install-clusternet
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: install-clusternet
+subjects:
+- kind: ServiceAccount
+  name: install-clusternet
+  namespace: default
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: install-clusternet-agent
+  namespace: default
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      serviceAccountName: install-clusternet
+      containers:
+      - name: helm
+        image: csighub.tencentyun.com/tdcc/helm:3.7.1
+        args: ["https://danielxlee.github.io/clusternet-charts", "install", "clusternet-syncer", "-n", "clusternet-system", "--create-namespace", "helmrepo/clusternet-syncer"]
+      restartPolicy: Never
+  backoffLimit: 4
