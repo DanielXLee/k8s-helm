@@ -1,0 +1,11 @@
+FROM alpine/helm:3.7.1 as builder
+
+COPY charts /charts
+RUN apk update && apk add --no-cache git curl && \
+    helm plugin install https://github.com/chartmuseum/helm-push.git
+
+WORKDIR /charts
+
+COPY entrypoint-helm /usr/local/bin/entrypoint
+
+ENTRYPOINT ["/usr/local/bin/entrypoint"]

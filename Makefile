@@ -1,8 +1,9 @@
 # Image repo
 IMG_REPO ?= ccr.ccs.tencentyun.com/danielxxli
 # Image URL to use all building/pushing image targets
-IMG ?= ${IMG_REPO}/helm:3.7.1
+IMG ?= ${IMG_REPO}/clusternet-agent-installer:v0.2.0
 
+HELM_IMG ?= ${IMG_REPO}/helm:latest
 
 ##@ General
 
@@ -25,11 +26,11 @@ help: ## Display this help.
 image:  ## Build helm image.
 	docker build -t ${IMG} .
 
-test-image:  ## Build helm test image.
-	docker build -t ${IMG} -f Dockerfile.test .
-
-push-image: ## Push helm image.
+push-image: image ## Push helm image.
 	docker push ${IMG}
 
-push-test-image: test-image ## Push helm test image.
-	docker push ${IMG}
+helm-image:  ## Build helm image.
+	docker build -t ${HELM_IMG} -f Dockerfile.helm .
+
+push-helm-image: helm-image ## Push helm image.
+	docker push ${HELM_IMG}

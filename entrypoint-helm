@@ -1,0 +1,6 @@
+#!/bin/sh
+set -x
+helm repo add helmrepo $CHART_REPO_URL
+for i in $(ls /charts); do
+  helm cm-push $i helmrepo
+done

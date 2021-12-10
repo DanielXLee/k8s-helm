@@ -1,4 +1,74 @@
-#!/usr/local/bin/bash
+#!/bin/sh
+set -x
+usage () {
+  local script="${0##*/}"
 
-/usr/local/bin/helm repo add helmrepo $1
-/usr/local/bin/helm ${*:2}
+  while read -r ; do echo "${REPLY}" ; done <<-EOF
+    Usage: ${script} [OPTION]
+    Install/Upgrade clusternet-agent chart
+    Options:
+      -h, --help          Display this help and exit
+      --repo              Helm repository URL
+      --chart             Chart name
+      --version           Chart version
+      --release           Install/Upgrade release name
+      --namespace         Namespace of the chart
+    Examples:
+      Install chart:
+        ${script} --chart clusternet-agent --version 0.2.0 --namespace clusternet-system --release clusternet-agent --set parentURL=https://169.254.128.158:60002 --set registrationToken=9t6692.kv4b7cpfgrndjl7v --set extraArgs.cluster-reg-name=cls-8w9t6692
+EOF
+}
+
+while [ "$#" -gt "0" ]
+do
+  case "$1" in
+  "-h"|"--help")
+    usage
+    exit 0
+    ;;
+  "--set")
+    shift
+    SETS="${SETS} --set $1"
+    ;;
+  "--repo")
+    shift
+    HELM_REPO="$1"
+    ;;
+  "--release")
+    shift
+    RELEASE_NAME="$1"
+    ;;    
+  "--namespace")
+    shift
+    NAMESPACE="$1"
+    ;;
+  "--chart")
+    shift
+    CHART="$1"
+    ;;
+  "--version")
+    shift
+    VERSION="$1"
+    ;;
+  *)
+    echo "invalid option -- \`$1'"
+    exit 1
+    ;;
+  esac
+  shift
+done
+
+CHART=${CHART:-"clusternet-agent"}
+RELEASE_NAME=${RELEASE_NAME:-"internal-helm-clusternet-system-clusternet-agent"}
+NAMESPACE=${NAMESPACE:-"clusternet-system"}
+
+[[ "X${VERSION}" == "X" ]] && echo "--version is required" && exit 1
+if [[ -z "${HELM_REPO}" ]]; then
+  CHART="${CHART}-${VERSION}.tgz"
+  helm upgrade ${RELEASE_NAME} ${CHART} --install --namespace ${NAMESPACE} ${SETS}
+else
+  helm repo add helmrepo ${HELM_REPO}
+  [[ $? -ne 0 ]] && echo "helm repo add helmrepo ${HELM_REPO} failed" && exit 1
+  CHART="helmrepo/${CHART}"
+  helm upgrade ${RELEASE_NAME} ${CHART} --install --version ${VERSION} --namespace ${NAMESPACE} ${SETS}
+fi
